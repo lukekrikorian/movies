@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	querystring "github.com/google/go-querystring/query"
@@ -112,7 +113,9 @@ func (m *Movie) Magnet() string {
 	var magnet string
 	for _, torrent := range m.Torrents {
 		if torrent.Quality == query.Quality {
-			magnet = "magnet:?xt=urn:btih:" + torrent.Hash + "&dn=" + url.QueryEscape(m.Title)
+			escaped := url.QueryEscape(m.Title)
+			spaced := strings.ReplaceAll(escaped, "+", "%20")
+			magnet = "magnet:?xt=urn:btih:" + torrent.Hash + "&dn=" + spaced
 		}
 	}
 	if !disableTrackers && magnet != "" {
