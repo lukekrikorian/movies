@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
+	"movies/letterboxd"
 	"net/http"
 	"net/url"
 	"os"
@@ -66,6 +68,7 @@ var (
 	query           = new(Query)
 	disableTrackers = false
 	open            = false
+	watchlist       = ""
 	trackers        = [...]string{
 		"udp://open.demonii.com:1337/announce",
 		"udp://tracker.openbittorrent.com:80",
@@ -179,8 +182,31 @@ func main() {
 				Usage:       "opens the first search result magnet link",
 				Destination: &open,
 			},
+			&cli.StringFlag{
+				Name:        "watchlist",
+				Aliases:     []string{"l"},
+				Usage:       "retrieves a random film from a letterboxd watchlist and searches it",
+				Destination: &watchlist,
+			},
 		},
 		Action: func(c *cli.Context) error {
+			if watchlist != "" {
+				movies := letterboxd.Watchlist(watchlist)
+				if len(movies) < 1 {
+					fmt.Println("No movies in watchlist.")
+					return nil
+				}
+
+				rand.Seed(time.Now().Unix())
+				index := rand.Intn(len(movies))
+				movie := movies[index]
+				movietitle := fmt.Sprintf("%s %s",
+					movie[letterboxd.Title],
+					movie[letterboxd.Year])
+				query.QueryTerm = movietitle
+				fmt.Println("Searching for", movietitle)
+			}
+
 			movies := query.Search()
 			for i, movie := range movies {
 				magnet := movie.Magnet()
