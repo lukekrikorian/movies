@@ -68,6 +68,7 @@ var (
 	query           = new(Query)
 	disableTrackers = false
 	open            = false
+	preview         = false
 	watchlist       = ""
 	trackers        = [...]string{
 		"udp://open.demonii.com:1337/announce",
@@ -188,6 +189,11 @@ func main() {
 				Usage:       "retrieves a random film from a letterboxd watchlist and searches it",
 				Destination: &watchlist,
 			},
+			&cli.BoolFlag{
+				Name:        "preview",
+				Usage:       "Opens the movie on letterboxd if searching from the watchlist",
+				Destination: &preview,
+			},
 		},
 		Action: func(c *cli.Context) error {
 			if watchlist != "" {
@@ -205,6 +211,10 @@ func main() {
 					movie[letterboxd.Year])
 				query.QueryTerm = movietitle
 				fmt.Println("Searching for", movietitle)
+
+				if preview {
+					browser.OpenURL(movie[letterboxd.URL])
+				}
 			}
 
 			movies := query.Search()
